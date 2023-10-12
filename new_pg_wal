@@ -1,0 +1,40 @@
+
+//create a new wal dir and make sure that the ownerships set right
+
+mkdir new_wal
+chmod 700 /new_wal
+chown enterprisedb:enterprisedb /new_wal
+
+
+//take a checkpoint on the db and then stop the psql server
+
+su - enterprisedb
+psql edb
+checkpoint;
+
+/usr/edb/as12/bin/pg_ctl -D /data stop
+
+
+//copy the last wal file on the /dat/pg_wal to the new pg_wal location
+[root@172 pg_wal]# cp /data/pg_wal/00000001000000000000004F /new_wal
+
+//change the name of the original pg_wal file because after the symbolic link it will shown to itselt ofer the new dir
+[root@172 /]# mv /data/pg_wal/ /data/pg_wal_old
+
+//create a symbolic link over the pg_wal
+[root@172 data]# ln -s /yeni/ pg_wal
+
+//make sure the symbolic link created
+[root@172 data]# ls -latrh pg_wal
+lrwxrwxrwx. 1 root root 6 Oct 11 13:55 pg_wal -> /new_wal/
+
+//do not forget to control under the new_wal files. it should have the enterprisedb ownership. if it is not, change it 
+chown -R enterprisedb:enterprisedb /new_wal/
+
+//start the server and test it
+/usr/edb/as12/bin/pg_ctl -D /data start
+
+
+
+
+
